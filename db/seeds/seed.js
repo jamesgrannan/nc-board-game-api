@@ -15,7 +15,7 @@ const seed = async (data) => {
 (slug VARCHAR(50) PRIMARY KEY,
 description TEXT NOT NULL);`);
 
-  const categoryQuery = await format(
+  const categoryQuery = format(
     `INSERT INTO categories
 (slug, description)
 VALUES
@@ -35,7 +35,7 @@ RETURNING *;`,
 name VARCHAR(50) NOT NULL
 );`);
 
-  const userQuery = await format(
+  const userQuery = format(
     `INSERT INTO users
 (username, avatar_url, name)
 VALUES
@@ -56,11 +56,11 @@ RETURNING *;`,
     designer VARCHAR(50) NOT NULL,
   review_img_url TEXT DEFAULT 'https://images.pexels.com/photos/163064/play-stone-network-networked-interactive-163064.jpeg' NOT NULL,
   votes INT DEFAULT 0 NOT NULL,
-  category VARCHAR(50) REFERENCES categories(slug),
-  owner VARCHAR(50) REFERENCES users(username),
+  category VARCHAR(50) REFERENCES categories(slug) ON DELETE CASCADE NOT NULL,
+  owner VARCHAR(50) REFERENCES users(username) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL);`);
 
-  const reviewQuery = await format(
+  const reviewQuery = format(
     `INSERT INTO reviews
     (title, review_body, designer, review_img_url, votes, category, owner, created_at)
     VALUES
@@ -84,13 +84,13 @@ RETURNING *;`,
 
   await db.query(`CREATE TABLE comments
     (comment_id SERIAL PRIMARY KEY,
-      author VARCHAR(50) REFERENCES users(username),
-      review_id INT REFERENCES reviews(review_id),
+      author VARCHAR(50) REFERENCES users(username) ON DELETE CASCADE NOT NULL,
+      review_id INT REFERENCES reviews(review_id) ON DELETE CASCADE NOT NULL,
       votes INT DEFAULT 0 NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
       body TEXT NOT NULL);`);
 
-  const commentQuery = await format(
+  const commentQuery = format(
     `INSERT INTO comments
       (author, review_id, votes, created_at, body)
       VALUES
