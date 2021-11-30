@@ -55,7 +55,7 @@ describe("GET /api/categories", () => {
   test("STATUS: 200, respond with array of all the slugs and descriptions", async () => {
     const { body } = await request(app).get("/api/categories").expect(200);
     expect(typeof body).toBe("object");
-    expect(Array.isArray(body)).toBe(false);
+    expect(body).not.toBeInstanceOf(Array);
     expect(body.categories).toEqual([
       {
         slug: "euro game",
@@ -72,19 +72,33 @@ describe("GET /api/categories", () => {
 });
 
 describe("GET /api/reviews/:review_id", () => {
-  test("STATUS: 200 responds with correct review", async () => {
-    const { body } = await request(app).get("/api/reviews/5").status(200);
-    expect(body.review).toEqual({
-      title: "Proident tempor et.",
-      designer: "Seymour Buttz",
-      owner: "mallionaire",
-      review_img_url:
-        "https://images.pexels.com/photos/163064/play-stone-network-networked-interactive-163064.jpeg",
-      review_body:
-        "Labore occaecat sunt qui commodo anim anim aliqua adipisicing aliquip fugiat. Ad in ipsum incididunt esse amet deserunt aliqua exercitation occaecat nostrud irure labore ipsum. Culpa tempor non voluptate reprehenderit deserunt pariatur cupidatat aliqua adipisicing. Nostrud labore dolor fugiat sint consequat excepteur dolore irure eu. Anim ex adipisicing magna deserunt enim fugiat do nulla officia sint. Ex tempor ut aliquip exercitation eiusmod. Excepteur deserunt officia voluptate sunt aliqua esse deserunt velit. In id non proident veniam ipsum id in consequat duis ipsum et incididunt. Qui cupidatat ea deserunt magna proident nisi nulla eiusmod aliquip magna deserunt fugiat fugiat incididunt. Laboris nisi velit mollit ullamco deserunt eiusmod deserunt ea dolore veniam.",
-      category: "social deduction",
-      created_at: new Date(1610010368077),
-      votes: 5,
-    });
+  test("STATUS: 200, responds with correct review", async () => {
+    const { body } = await request(app).get("/api/reviews/5").expect(200);
+    expect(body).toBeInstanceOf(Object);
+    expect(body.review).toHaveLength(1);
+    expect(body.review[0]).toEqual(
+      expect.objectContaining({
+        title: expect.any(String),
+        designer: expect.any(String),
+        owner: expect.any(String),
+        review_img_url: expect.any(String),
+        review_body: expect.any(String),
+        category: expect.any(String),
+        created_at: expect.any(String),
+        votes: expect.any(Number),
+      })
+    );
+  });
+
+  test("STATUS: 400, responds with 400 error", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/NO_ENTRY")
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, responds with 404 error", async () => {
+    const { body } = await request(app).get("/api/reviews/5000").expect(404);
+    expect(body).toEqual({ msg: "No review found at review_id: 5000" });
   });
 });
