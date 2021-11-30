@@ -3,10 +3,7 @@ const db = require("../connection");
 
 const seed = async (data) => {
   const { categoryData, commentData, reviewData, userData } = data;
-  console.log("seeding the database...");
-  console.log("🌰");
-  console.log("🌱");
-  console.log("🌻");
+  console.log("seeding the database...🌰...🌱...🌻");
   await db.query(`DROP TABLE IF EXISTS comments;`);
   await db.query(`DROP TABLE IF EXISTS reviews;`);
   await db.query(`DROP TABLE IF EXISTS users;`);
@@ -25,9 +22,7 @@ RETURNING *;`,
   );
 
   let categories = await db.query(categoryQuery);
-  console.log("*****CATEGORIES******");
   categories = categories.rows;
-  console.log(categories);
 
   await db.query(`CREATE TABLE users (
   username VARCHAR(50) PRIMARY KEY,
@@ -45,9 +40,7 @@ RETURNING *;`,
   );
 
   let users = await db.query(userQuery);
-  console.log("*****USERS******");
   users = users.rows;
-  console.log(users);
 
   await db.query(`CREATE TABLE reviews
   (review_id SERIAL PRIMARY KEY,
@@ -78,9 +71,7 @@ RETURNING *;`,
     ])
   );
   let reviews = await db.query(reviewQuery);
-  console.log("******REVIEWS******");
   reviews = reviews.rows;
-  console.log(reviews);
 
   await db.query(`CREATE TABLE comments
     (comment_id SERIAL PRIMARY KEY,
@@ -107,8 +98,7 @@ RETURNING *;`,
 
   let comments = await db.query(commentQuery);
   comments = comments.rows;
-  console.log("*****COMMENTS******");
-  console.log(comments);
   return comments;
 };
+
 module.exports = seed;
