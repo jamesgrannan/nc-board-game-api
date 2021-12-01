@@ -73,7 +73,7 @@ describe("GET /api/categories", () => {
 
 describe("GET /api/reviews/:review_id", () => {
   test("STATUS: 200, responds with correct review", async () => {
-    const { body } = await request(app).get("/api/reviews/5").expect(200);
+    const { body } = await request(app).get("/api/reviews/2").expect(200);
     expect(body).toBeInstanceOf(Object);
     expect(body.review).toHaveLength(1);
     expect(body.review[0]).toEqual(
@@ -86,19 +86,131 @@ describe("GET /api/reviews/:review_id", () => {
         category: expect.any(String),
         created_at: expect.any(String),
         votes: expect.any(Number),
+        comment_count: "3",
       })
     );
   });
 
-  test("STATUS: 400, responds with 400 error", async () => {
+  test("STATUS: 400, bad id", async () => {
     const { body } = await request(app)
       .get("/api/reviews/NO_ENTRY")
       .expect(400);
     expect(body).toEqual({ msg: "Invalid input" });
   });
 
-  test("STATUS: 404, responds with 404 error", async () => {
+  test("STATUS: 404, id doesn't exist", async () => {
     const { body } = await request(app).get("/api/reviews/5000").expect(404);
     expect(body).toEqual({ msg: "No review found at review_id: 5000" });
+  });
+});
+
+describe("PATCH /api/reviews/:review_id", () => {
+  test("STATUS: 200, responds with updated review when adding reviews", async () => {
+    const votes = { inc_votes: 3 };
+    const { body } = await request(app)
+      .patch("/api/reviews/2")
+      .send(votes)
+      .expect(200);
+    expect(body.review[0]).toEqual(
+      expect.objectContaining({
+        title: "Jenga",
+        designer: "Leslie Scott",
+        owner: "philippaclaire9",
+        review_img_url:
+          "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        review_body: "Fiddly fun for all the family",
+        category: "dexterity",
+        created_at: expect.any(String),
+        votes: 8,
+        review_id: 2,
+      })
+    );
+  });
+  test("STATUS: 200, responds with updated review when subtracting reviews", async () => {
+    const votes = { inc_votes: -4 };
+    const { body } = await request(app)
+      .patch("/api/reviews/2")
+      .send(votes)
+      .expect(200);
+    expect(body.review[0]).toEqual(
+      expect.objectContaining({
+        title: "Jenga",
+        designer: "Leslie Scott",
+        owner: "philippaclaire9",
+        review_img_url:
+          "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        review_body: "Fiddly fun for all the family",
+        category: "dexterity",
+        created_at: expect.any(String),
+        votes: 1,
+        review_id: 2,
+      })
+    );
+  });
+  test("STATUS: 200, responds with updated review and votes can't be subtracted below 0", async () => {
+    const votes = { inc_votes: -100 };
+    const { body } = await request(app)
+      .patch("/api/reviews/2")
+      .send(votes)
+      .expect(200);
+    expect(body.review[0]).toEqual(
+      expect.objectContaining({
+        title: "Jenga",
+        designer: "Leslie Scott",
+        owner: "philippaclaire9",
+        review_img_url:
+          "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        review_body: "Fiddly fun for all the family",
+        category: "dexterity",
+        created_at: expect.any(String),
+        votes: 0,
+        review_id: 2,
+      })
+    );
+  });
+
+  test("STATUS: 400, bad id", async () => {
+    const votes = { inc_votes: 10 };
+    const { body } = await request(app)
+      .patch("/api/reviews/NO_ENTRY")
+      .send(votes)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const votes = { inc_votes: 10 };
+    const { body } = await request(app)
+      .get("/api/reviews/500")
+      .send(votes)
+      .expect(404);
+    expect(body).toEqual({ msg: "No review found at review_id: 500" });
+  });
+
+  test("STATUS: 400, no votes on the request body", async () => {
+    const votes = { not_inc_votes: 1 };
+    const { body } = await request(app)
+      .get("/api/reviews/14")
+      .send(votes)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 400, invalid votes value", async () => {
+    const votes = { inc_votes: "string" };
+    const { body } = await request(app)
+      .get("/api/reviews/10")
+      .send(votes)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 400, included other information", async () => {
+    const votes = { inc_votes: 2, hello: "world" };
+    const { body } = await request(app)
+      .get("/api/reviews/11")
+      .send(votes)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
   });
 });

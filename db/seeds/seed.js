@@ -3,7 +3,6 @@ const db = require("../connection");
 
 const seed = async (data) => {
   const { categoryData, commentData, reviewData, userData } = data;
-  console.log("seeding the database...🌰...🌱...🌻");
   await db.query(`DROP TABLE IF EXISTS comments;`);
   await db.query(`DROP TABLE IF EXISTS reviews;`);
   await db.query(`DROP TABLE IF EXISTS users;`);

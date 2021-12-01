@@ -1,6 +1,6 @@
-const { getReview } = require("../controllers/review.controller");
+const { getReview, patchReview } = require("../controllers/review.controller");
 const reviewRouter = require("express").Router();
 
-reviewRouter.get("/:review_id", getReview);
+reviewRouter.route("/:review_id").get(getReview).patch(patchReview);
 
 module.exports = reviewRouter;
