@@ -217,5 +217,16 @@ describe("GET api/reviews", () => {
     );
   });
 
-  test("STATUS: 200, respond with sorted reviews when requested to with sort_by query", async () => {});
+  test.skip("STATUS: 200, respond with sorted reviews when sorted by votes", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?sort_by=votes")
+      .expect(200);
+    expect(body.reviews).toHaveLength(13);
+    expect(
+      body.reviews[6].created_at <= body.reviews[0].created_at
+    ).toBeTruthy();
+    expect(
+      body.reviews[6].created_at >= body.reviews[12].created_at
+    ).toBeTruthy();
+  });
 });

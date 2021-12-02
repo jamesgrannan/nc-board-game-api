@@ -54,7 +54,7 @@ exports.updateReview = (id, update) => {
     });
 };
 
-exports.fetchAllReviews = () => {
+exports.fetchAllReviews = (sort) => {
   return db
     .query(
       `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes, 
@@ -69,13 +69,3 @@ exports.fetchAllReviews = () => {
       return rows;
     });
 };
-
-//title: expect.any(String),
-// owner: expect.any(String),
-// review_id: expect.any(Number),
-// review_img_url: expect.any(String),
-// review_body: expect.any(String),
-// category: expect.any(String),
-// created_at: expect.any(String),
-// votes: expect.any(Number),
-// comment_count:
