@@ -21,7 +21,7 @@ exports.fetchReview = (id) => {
           msg: `No review found at review_id: ${id}`,
         });
       }
-      return rows;
+      return rows[0];
     });
 };
 

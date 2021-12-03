@@ -7,50 +7,6 @@ const app = require("../app");
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
 
-describe("GET /api", () => {
-  test("STATUS: 200, respond with JSON object", async () => {
-    const { body } = await request(app).get("/api").expect(200);
-    expect(typeof body).toEqual("object");
-    expect(body.endpoints).toEqual({
-      "GET /api": {
-        description:
-          "serves up a json representation of all the available endpoints of the api",
-      },
-      "GET /api/categories": {
-        description: "serves an array of all categories",
-        queries: [],
-        exampleResponse: {
-          categories: [
-            {
-              description:
-                "Players attempt to uncover each other's hidden role",
-              slug: "Social deduction",
-            },
-          ],
-        },
-      },
-      "GET /api/reviews": {
-        description: "serves an array of all reviews",
-        queries: ["category", "sort_by", "order"],
-        exampleResponse: {
-          reviews: [
-            {
-              title: "One Night Ultimate Werewolf",
-              designer: "Akihisa Okui",
-              owner: "happyamy2016",
-              review_img_url:
-                "https://images.pexels.com/photos/5350049/pexels-photo-5350049.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-              category: "hidden-roles",
-              created_at: 1610964101251,
-              votes: 5,
-            },
-          ],
-        },
-      },
-    });
-  });
-});
-
 describe("GET /api/categories", () => {
   test("STATUS: 200, respond with array of all the slugs and descriptions", async () => {
     const { body } = await request(app).get("/api/categories").expect(200);
@@ -75,8 +31,7 @@ describe("GET /api/reviews/:review_id", () => {
   test("STATUS: 200, responds with correct review", async () => {
     const { body } = await request(app).get("/api/reviews/2").expect(200);
     expect(body).toBeInstanceOf(Object);
-    expect(body.review).toHaveLength(1);
-    expect(body.review[0]).toEqual(
+    expect(body.review).toEqual(
       expect.objectContaining({
         title: "Jenga",
         designer: "Leslie Scott",
@@ -367,7 +322,7 @@ describe("POST api/reviews/:review_id/comments", () => {
   });
 });
 
-describe.only("DELETE /api/comments/:comment_id", () => {
+describe("DELETE /api/comments/:comment_id", () => {
   test("STATUS 204, delete comment and respond with nothing", async () => {
     const result = await request(app).delete("/api/comments/1").expect(204);
   });
@@ -384,5 +339,23 @@ describe.only("DELETE /api/comments/:comment_id", () => {
       .delete("/api/comments/9999")
       .expect(404);
     expect(body).toEqual({ msg: "No review found at review_id: 9999" });
+  });
+});
+
+describe("GET /api", () => {
+  test("STATUS: 200, respond with JSON object", async () => {
+    const { body } = await request(app).get("/api").expect(200);
+    expect(body.endpoints).toEqual(
+      expect.objectContaining({
+        "GET /api": expect.any(Object),
+        "GET /api/categories": expect.any(Object),
+        "GET /api/reviews": expect.any(Object),
+        "GET /api/reviews/:review_id": expect.any(Object),
+        "PATCH /api/reviews/:review_id": expect.any(Object),
+        "GET api/reviews/:review_id/comments": expect.any(Object),
+        "POST api/reviews/:review_id/comments": expect.any(Object),
+        "DELETE /api/comments/:comment_id": expect.any(Object),
+      })
+    );
   });
 });

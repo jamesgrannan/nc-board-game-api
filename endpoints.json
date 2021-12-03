@@ -30,5 +30,72 @@
         }
       ]
     }
+  },
+  "GET /api/reviews/:review_id": {
+    "description": "serves a specific review",
+    "queries": [],
+    "exampleResponse": {
+      "review": {
+        "title": "Jenga",
+        "designer": "Leslie Scott",
+        "owner": "philippaclaire9",
+        "review_img_url": "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        "review_body": "Fiddly fun for all the family",
+        "category": "dexterity",
+        "created_at": "2021-01-18T10:01:41.251Z",
+        "votes": 5,
+        "review_id": 2,
+        "comment_count": "3"
+      }
+    }
+  },
+  "PATCH /api/reviews/:review_id": {
+    "description": "updates and increases votes key on a specific review",
+    "examplePatchRequest": { "inc_votes": 3 },
+    "exampleResponse": {
+      "review": {
+        "title": "Jenga",
+        "designer": "Leslie Scott",
+        "owner": "philippaclaire9",
+        "review_img_url": "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        "review_body": "Fiddly fun for all the family",
+        "category": "dexterity",
+        "created_at": "2021-01-18T10:01:41.251Z",
+        "votes": 8,
+        "review_id": 2
+      }
+    }
+  },
+  "GET api/reviews/:review_id/comments": {
+    "description": "gets all the comments on a specific review",
+    "queries": [],
+    "exampleResponse": {
+      "comments": [
+        {
+          "body": "I loved this game too!",
+          "votes": 16,
+          "author": "happyamy2016",
+          "review_id": 2,
+          "created_at": "2021-01-18T10:01:41.251Z"
+        }
+      ]
+    }
+  },
+  "POST api/reviews/:review_id/comments": {
+    "description": "posts an new comment on a review",
+    "examplePostRequest": { "username": "bainesface", "body": "Nice review!" },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 7,
+        "author": "bainesface",
+        "review_id": 1,
+        "votes": 0,
+        "created_at": "2021-12-03T18:02:52.447Z",
+        "body": "Nice review!"
+      }
+    }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "deletes a comment under a review"
   }
 }
