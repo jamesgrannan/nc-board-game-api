@@ -200,6 +200,9 @@ describe("GET api/reviews", () => {
   test("STATUS: 200, respond with all reviews", async () => {
     const { body } = await request(app).get("/api/reviews").expect(200);
     expect(body.reviews).toHaveLength(13);
+    console.log(body.reviews);
+    expect(/^2021/.test(body.reviews[0].created_at)).toBeTruthy();
+    expect(/^1970/.test(body.reviews[12].created_at)).toBeTruthy();
     body.reviews.forEach((review) =>
       expect(review).toEqual(
         expect.objectContaining({
@@ -217,16 +220,59 @@ describe("GET api/reviews", () => {
     );
   });
 
-  test.skip("STATUS: 200, respond with sorted reviews when sorted by votes", async () => {
+  test("STATUS: 200, respond with sorted reviews when sorted by votes", async () => {
     const { body } = await request(app)
       .get("/api/reviews?sort_by=votes")
       .expect(200);
     expect(body.reviews).toHaveLength(13);
-    expect(
-      body.reviews[6].created_at <= body.reviews[0].created_at
-    ).toBeTruthy();
-    expect(
-      body.reviews[6].created_at >= body.reviews[12].created_at
-    ).toBeTruthy();
+    expect(body.reviews[6].votes <= body.reviews[0].votes).toBeTruthy();
+    expect(body.reviews[6].votes >= body.reviews[12].votes).toBeTruthy();
+  });
+
+  test("STATUS: 200, respond with sorted reviews when sorted by category", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?sort_by=category&order=ASC")
+      .expect(200);
+    const sorted = body.reviews
+      .reverse()
+      .map((review) => review.category)
+      .sort((a, b) => b.localeCompare(a));
+    expect(body.reviews).toHaveLength(13);
+    expect(body.reviews.map((review) => review.category)).toEqual(sorted);
+  });
+
+  test("STATUS 200, respond with filtered reviews", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?category=social+deduction")
+      .expect(200);
+    expect(body.reviews).toHaveLength(11);
+    body.reviews.forEach((review) => {
+      expect(review.category).toBe("social deduction");
+    });
+  });
+
+  test("STATUS 200, respond with filtered reviews when AND is used", async () => {
+    const { body } = await request(app)
+      .get(
+        "/api/reviews?category=dexterity&category=euro+game&order=ASC&sort_by=category"
+      )
+      .expect(200);
+    expect(body.reviews).toHaveLength(2);
+    expect(body.reviews[0].category).toBe("dexterity");
+    expect(body.reviews[1].category).toBe("euro game");
+  });
+
+  test("STATUS 400: responds with 400 when invalid sort_by query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?sort_by=frogs")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid sort query");
+  });
+
+  test("STATUS 400: responds with 400 when invalid order query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?order=created_at")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid order query");
   });
 });

@@ -54,18 +54,64 @@ exports.updateReview = (id, update) => {
     });
 };
 
-exports.fetchAllReviews = (sort) => {
-  return db
-    .query(
-      `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes, 
+exports.fetchAllReviews = ({
+  sort_by = "created_at",
+  order = "DESC",
+  category,
+}) => {
+  const queryValues = [];
+  if (
+    ![
+      "title",
+      "owner",
+      "review_id",
+      "category",
+      "created_at",
+      "votes",
+      "comment_count",
+    ].includes(sort_by)
+  ) {
+    return Promise.reject({ status: 400, msg: "Invalid sort query" });
+  }
+  if (!["ASC", "DESC"].includes(order)) {
+    return Promise.reject({ status: 400, msg: "Invalid order query" });
+  }
+  let queryStr = `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes,
   COUNT(comments.review_id)
   AS comment_count
   FROM reviews
   LEFT JOIN comments
-  ON comments.review_id = reviews.review_id
-  GROUP BY reviews.review_id`
-    )
-    .then(({ rows }) => {
-      return rows;
-    });
+  ON comments.review_id = reviews.review_id`;
+
+  const categoryList = [
+    "euro game",
+    "social deduction",
+    "dexterity",
+    "children's games",
+    "strategy",
+    "hidden-roles",
+    "push-your-luck",
+    "roll-and-write",
+    "deck-building",
+    "engine-building",
+  ];
+
+  let cat = typeof category === "string" ? [category] : category || [null];
+
+  if (cat.every((element) => categoryList.includes(element))) {
+    for (let i = 0; i < cat.length; i++) {
+      if (queryValues.length) {
+        queryStr += " OR";
+      } else {
+        queryStr += " WHERE";
+      }
+      queryValues.push(cat[i]);
+      queryStr += ` category = $${queryValues.length}`;
+    }
+  }
+  queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`;
+
+  return db.query(queryStr, queryValues).then(({ rows }) => {
+    return rows;
+  });
 };
