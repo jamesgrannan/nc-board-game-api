@@ -111,7 +111,37 @@ exports.fetchAllReviews = ({
   }
   queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`;
 
-  return db.query(queryStr, queryValues).then(({ rows }) => {
-    return rows;
-  });
+  return db.query(queryStr, queryValues).then(({ rows }) => rows);
+};
+
+exports.fetchComments = (id) => {
+  return db
+    .query(
+      `SELECT *
+FROM comments
+LEFT JOIN reviews
+ON reviews.review_id = comments.review_id
+WHERE comments.review_id = $1;`,
+      [id]
+    )
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return db
+          .query(`SELECT * FROM reviews WHERE review_id = $1`, [id])
+          .then(({ rows }) => {
+            if (rows.length > 0) {
+              return Promise.reject({
+                status: 404,
+                msg: "No comments on this review",
+              });
+            }
+
+            return Promise.reject({
+              status: 404,
+              msg: `No review found at review_id: ${id}`,
+            });
+          });
+      }
+      return rows;
+    });
 };

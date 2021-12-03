@@ -200,7 +200,6 @@ describe("GET api/reviews", () => {
   test("STATUS: 200, respond with all reviews", async () => {
     const { body } = await request(app).get("/api/reviews").expect(200);
     expect(body.reviews).toHaveLength(13);
-    console.log(body.reviews);
     expect(/^2021/.test(body.reviews[0].created_at)).toBeTruthy();
     expect(/^1970/.test(body.reviews[12].created_at)).toBeTruthy();
     body.reviews.forEach((review) =>
@@ -274,5 +273,46 @@ describe("GET api/reviews", () => {
       .get("/api/reviews?order=created_at")
       .expect(400);
     expect(body.msg).toEqual("Invalid order query");
+  });
+});
+
+describe.only("GET api/reviews/:review_id/comments", () => {
+  test("STATUS: 200, respond with comments from a specific review", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/3/comments")
+      .expect(200);
+    expect(body.comments).toHaveLength(3);
+    body.comments.forEach((comment) => {
+      expect(comment).toEqual(
+        expect.objectContaining({
+          comment_id: expect.any(Number),
+          votes: expect.any(Number),
+          created_at: expect.any(String),
+          author: expect.any(String),
+          body: expect.any(String),
+        })
+      );
+    });
+  });
+
+  test("STATUS: 400, bad id", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/NO_ENTRY/comments")
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/1000/comments")
+      .expect(404);
+    expect(body).toEqual({ msg: "No review found at review_id: 1000" });
+  });
+
+  test("STATUS: 404, no comments on this review", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/1/comments")
+      .expect(404);
+    expect(body.msg).toEqual("No comments on this review");
   });
 });
