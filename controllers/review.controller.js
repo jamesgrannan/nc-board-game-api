@@ -1,4 +1,3 @@
-const comments = require("../db/data/test-data/comments");
 const {
   fetchReview,
   updateReview,

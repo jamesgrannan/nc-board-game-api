@@ -366,3 +366,23 @@ describe("POST api/reviews/:review_id/comments", () => {
     expect(result.body).toEqual({ msg: "Invalid input" });
   });
 });
+
+describe.only("DELETE /api/comments/:comment_id", () => {
+  test("STATUS 204, delete comment and respond with nothing", async () => {
+    const result = await request(app).delete("/api/comments/1").expect(204);
+  });
+
+  test("STATUS: 400, bad id", async () => {
+    const { body } = await request(app)
+      .delete("/api/comments/nothing")
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const { body } = await request(app)
+      .delete("/api/comments/9999")
+      .expect(404);
+    expect(body).toEqual({ msg: "No review found at review_id: 9999" });
+  });
+});
