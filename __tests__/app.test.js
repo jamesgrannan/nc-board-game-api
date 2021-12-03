@@ -113,7 +113,7 @@ describe("PATCH /api/reviews/:review_id", () => {
       .patch("/api/reviews/2")
       .send(votes)
       .expect(200);
-    expect(body.review[0]).toEqual(
+    expect(body.review).toEqual(
       expect.objectContaining({
         title: "Jenga",
         designer: "Leslie Scott",
@@ -134,7 +134,7 @@ describe("PATCH /api/reviews/:review_id", () => {
       .patch("/api/reviews/2")
       .send(votes)
       .expect(200);
-    expect(body.review[0]).toEqual(
+    expect(body.review).toEqual(
       expect.objectContaining({
         title: "Jenga",
         designer: "Leslie Scott",
@@ -276,7 +276,7 @@ describe("GET api/reviews", () => {
   });
 });
 
-describe.only("GET api/reviews/:review_id/comments", () => {
+describe("GET api/reviews/:review_id/comments", () => {
   test("STATUS: 200, respond with comments from a specific review", async () => {
     const { body } = await request(app)
       .get("/api/reviews/3/comments")
@@ -314,5 +314,55 @@ describe.only("GET api/reviews/:review_id/comments", () => {
       .get("/api/reviews/1/comments")
       .expect(404);
     expect(body.msg).toEqual("No comments on this review");
+  });
+});
+
+describe("POST api/reviews/:review_id/comments", () => {
+  test("STATUS 201, posted comment successfully", async () => {
+    const newComment = { username: "bainesface", body: "Nice review!" };
+    const { body } = await request(app)
+      .post("/api/reviews/1/comments")
+      .send(newComment)
+      .expect(201);
+    expect(body.comment).toEqual({
+      review_id: 1,
+      comment_id: 7,
+      votes: 0,
+      created_at: expect.any(String),
+      author: "bainesface",
+      body: "Nice review!",
+    });
+  });
+  test("STATUS: 400, bad id", async () => {
+    const newComment = { username: "bainesface", body: "Nice review!" };
+    const { body } = await request(app)
+      .post("/api/reviews/banana/comments")
+      .send(newComment)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const newComment = { username: "bainesface", body: "Nice review!" };
+    const { body } = await request(app)
+      .post("/api/reviews/5700/comments")
+      .send(newComment)
+      .expect(404);
+    expect(body).toEqual({ msg: "No review found at review_id: 5700" });
+  });
+
+  test("STATUS: 400, request body is missing key", async () => {
+    const newComment = { username: "dav3rid" };
+    const { body } = await request(app)
+      .post("/api/reviews/4/comments")
+      .send(newComment)
+      .expect(400);
+    expect(body).toEqual({ msg: "Invalid input" });
+    const newComment2 = { body: "Nice review!" };
+    const result = await request(app)
+      .post("/api/reviews/9/comments")
+      .send(newComment2)
+      .expect(400);
+    expect(result.body).toEqual({ msg: "Invalid input" });
   });
 });

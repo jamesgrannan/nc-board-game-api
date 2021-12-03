@@ -4,6 +4,7 @@ const {
   updateReview,
   fetchAllReviews,
   fetchComments,
+  createComment,
 } = require("../models/reviews.model");
 
 exports.getReview = (req, res, next) => {
@@ -37,6 +38,15 @@ exports.getComments = (req, res, next) => {
   fetchComments(review_id)
     .then((comments) => {
       res.status(200).send({ comments });
+    })
+    .catch(next);
+};
+
+exports.postComment = (req, res, next) => {
+  const { review_id } = req.params;
+  createComment(req.body, review_id)
+    .then((comment) => {
+      res.status(201).send({ comment });
     })
     .catch(next);
 };

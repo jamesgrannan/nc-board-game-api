@@ -50,7 +50,7 @@ exports.updateReview = (id, update) => {
           msg: `No review found at review_id: ${id}`,
         });
       }
-      return rows;
+      return rows[0];
     });
 };
 
@@ -143,5 +143,39 @@ WHERE comments.review_id = $1;`,
           });
       }
       return rows;
+    });
+};
+
+exports.createComment = (post, id) => {
+  return db
+    .query(`SELECT * FROM reviews WHERE review_id = $1`, [id])
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: `No review found at review_id: ${id}`,
+        });
+      }
+    })
+    .then(() => {
+      const { username, body } = post;
+      return db
+        .query(
+          `INSERT INTO comments
+  (author, body, review_id)
+  VALUES
+  ($1, $2, $3)
+  RETURNING *;`,
+          [username, body, id]
+        )
+        .then(({ rows }) => {
+          if (rows.length === 0) {
+            return Promise.reject({
+              status: 404,
+              msg: `No review found at review_id: ${id}`,
+            });
+          }
+          return rows[0];
+        });
     });
 };
