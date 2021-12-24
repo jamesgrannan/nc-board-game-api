@@ -57,12 +57,13 @@ exports.updateReview = async (id, update) => {
   return searchDb.rows[0];
 };
 
-exports.fetchAllReviews = ({
+exports.fetchAllReviews = async ({
   sort_by = "created_at",
   order = "DESC",
   category,
 }) => {
   const queryValues = [];
+
   if (
     ![
       "title",
@@ -79,27 +80,23 @@ exports.fetchAllReviews = ({
   if (!["ASC", "DESC"].includes(order)) {
     return Promise.reject({ status: 400, msg: "Invalid order query" });
   }
-  const categoryList = [
-    "euro game",
-    "social deduction",
-    "dexterity",
-    "children's games",
-    "strategy",
-    "hidden-roles",
-    "push-your-luck",
-    "roll-and-write",
-    "deck-building",
-    "engine-building",
-  ];
   if (typeof category === "object") {
-    if (!categoryList.includes(...category)) {
-      return Promise.reject({ status: 404, msg: "Category not found" });
-    }
+    category.forEach(async (cat) => {
+      const checkCategory = await checkDatabase(
+        "categories",
+        "slug",
+        cat,
+        "Category not found"
+      );
+    });
   }
   if (typeof category === "string") {
-    if (category && !categoryList.includes(category)) {
-      return Promise.reject({ status: 404, msg: "Category not found" });
-    }
+    const checkCategory = await checkDatabase(
+      "categories",
+      "slug",
+      category,
+      "Category not found"
+    );
   }
   let queryStr = `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes,
   COUNT(comments.review_id)
@@ -108,9 +105,8 @@ exports.fetchAllReviews = ({
   LEFT JOIN comments
   ON comments.review_id = reviews.review_id`;
 
-  let cat = typeof category === "string" ? [category] : category || [null];
-
-  if (cat.every((element) => categoryList.includes(element))) {
+  let cat = typeof category === "string" ? [category] : category;
+  if (cat) {
     for (let i = 0; i < cat.length; i++) {
       if (queryValues.length) {
         queryStr += " OR";
@@ -123,39 +119,35 @@ exports.fetchAllReviews = ({
   }
   queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`;
 
-  return db.query(queryStr, queryValues).then(({ rows }) => rows);
+  const query = await db.query(queryStr, queryValues);
+  return query.rows;
 };
 
-exports.fetchComments = (id) => {
-  return db
-    .query(
-      `SELECT *
+exports.fetchComments = async (id) => {
+  const commentQuery = await db.query(
+    `SELECT *
 FROM comments
 LEFT JOIN reviews
 ON reviews.review_id = comments.review_id
 WHERE comments.review_id = $1;`,
-      [id]
-    )
-    .then(({ rows }) => {
-      if (rows.length === 0) {
-        return db
-          .query(`SELECT * FROM reviews WHERE review_id = $1`, [id])
-          .then(({ rows }) => {
-            if (rows.length > 0) {
-              return Promise.reject({
-                status: 404,
-                msg: "No comments on this review",
-              });
-            }
+    [id]
+  );
+  const { rows } = commentQuery;
+  if (rows.length === 0) {
+    const check = await checkDatabase(
+      "reviews",
+      "review_id",
+      id,
+      `No review found at review_id: ${id}`
+    );
 
-            return Promise.reject({
-              status: 404,
-              msg: `No review found at review_id: ${id}`,
-            });
-          });
-      }
-      return rows;
+    return Promise.reject({
+      status: 404,
+      msg: "No comments on this review",
     });
+  }
+
+  return rows;
 };
 
 exports.createComment = async (post, id) => {
