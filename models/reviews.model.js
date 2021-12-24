@@ -1,4 +1,5 @@
 const db = require("../db/connection");
+const checkDatabase = require("./utils.model");
 
 exports.fetchReview = (id) => {
   return db
@@ -25,33 +26,35 @@ exports.fetchReview = (id) => {
     });
 };
 
-exports.updateReview = (id, update) => {
-  if (
-    !update.inc_votes ||
-    typeof update.inc_votes === "string" ||
-    Object.keys(update).length > 1
-  ) {
+exports.updateReview = async (id, update) => {
+  if (typeof update.inc_votes === "string" || Object.keys(update).length > 1) {
     return Promise.reject({
       code: "22P02",
     });
   }
-  return db
-    .query(
-      `UPDATE reviews
+  if (!Object.keys(update).includes("inc_votes")) {
+    const review = await db.query(
+      `SELECT * FROM REVIEWS WHERE review_id = $1`,
+      [id]
+    );
+    return review.rows[0];
+  }
+  const searchDb = await db.query(
+    `UPDATE reviews
   SET votes = votes + $1
   WHERE review_id = $2
   RETURNING *;`,
-      [update.inc_votes, id]
-    )
-    .then(({ rows }) => {
-      if (rows.length === 0) {
-        return Promise.reject({
-          status: 404,
-          msg: `No review found at review_id: ${id}`,
-        });
-      }
-      return rows[0];
-    });
+    [update.inc_votes, id]
+  );
+  if (searchDb.rows.length === 0) {
+    const check = await checkDatabase(
+      "reviews",
+      "review_id",
+      id,
+      `No review found at review_id: ${id}`
+    );
+  }
+  return searchDb.rows[0];
 };
 
 exports.fetchAllReviews = ({
@@ -76,13 +79,6 @@ exports.fetchAllReviews = ({
   if (!["ASC", "DESC"].includes(order)) {
     return Promise.reject({ status: 400, msg: "Invalid order query" });
   }
-  let queryStr = `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes,
-  COUNT(comments.review_id)
-  AS comment_count
-  FROM reviews
-  LEFT JOIN comments
-  ON comments.review_id = reviews.review_id`;
-
   const categoryList = [
     "euro game",
     "social deduction",
@@ -95,6 +91,22 @@ exports.fetchAllReviews = ({
     "deck-building",
     "engine-building",
   ];
+  if (typeof category === "object") {
+    if (!categoryList.includes(...category)) {
+      return Promise.reject({ status: 404, msg: "Category not found" });
+    }
+  }
+  if (typeof category === "string") {
+    if (category && !categoryList.includes(category)) {
+      return Promise.reject({ status: 404, msg: "Category not found" });
+    }
+  }
+  let queryStr = `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes,
+  COUNT(comments.review_id)
+  AS comment_count
+  FROM reviews
+  LEFT JOIN comments
+  ON comments.review_id = reviews.review_id`;
 
   let cat = typeof category === "string" ? [category] : category || [null];
 
@@ -146,8 +158,8 @@ WHERE comments.review_id = $1;`,
     });
 };
 
-exports.createComment = (post, id) => {
-  return db
+exports.createComment = async (post, id) => {
+  const checkReviews = await db
     .query(`SELECT * FROM reviews WHERE review_id = $1`, [id])
     .then(({ rows }) => {
       if (rows.length === 0) {
@@ -156,26 +168,30 @@ exports.createComment = (post, id) => {
           msg: `No review found at review_id: ${id}`,
         });
       }
-    })
-    .then(() => {
-      const { username, body } = post;
-      return db
-        .query(
-          `INSERT INTO comments
+    });
+  if (post.username) {
+    const check = await checkDatabase(
+      "users",
+      "username",
+      post.username,
+      "Username doesn't exist"
+    );
+  }
+  const { username, body } = post;
+  const postingReview = await db.query(
+    `INSERT INTO comments
   (author, body, review_id)
   VALUES
   ($1, $2, $3)
   RETURNING *;`,
-          [username, body, id]
-        )
-        .then(({ rows }) => {
-          if (rows.length === 0) {
-            return Promise.reject({
-              status: 404,
-              msg: `No review found at review_id: ${id}`,
-            });
-          }
-          return rows[0];
-        });
+    [username, body, id]
+  );
+  const { rows } = postingReview;
+  if (rows.length === 0) {
+    return Promise.reject({
+      status: 404,
+      msg: `No review found at review_id: ${id}`,
     });
+  }
+  return rows[0];
 };

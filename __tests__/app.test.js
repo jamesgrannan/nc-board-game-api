@@ -105,6 +105,27 @@ describe("PATCH /api/reviews/:review_id", () => {
     );
   });
 
+  test("STATUS: 200, no votes on the request body, responds with unchanged review", async () => {
+    const votes = { not_inc_votes: 1 };
+    const { body } = await request(app)
+      .patch("/api/reviews/1")
+      .send(votes)
+      .expect(200);
+    expect(body.review).toEqual(
+      expect.objectContaining({
+        title: "Agricola",
+        designer: "Uwe Rosenberg",
+        owner: "mallionaire",
+        review_img_url:
+          "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        review_body: "Farmyard fun!",
+        category: "euro game",
+        created_at: expect.any(String),
+        votes: 1,
+      })
+    );
+  });
+
   test("STATUS: 400, bad id", async () => {
     const votes = { inc_votes: 10 };
     const { body } = await request(app)
@@ -120,16 +141,7 @@ describe("PATCH /api/reviews/:review_id", () => {
       .patch("/api/reviews/500")
       .send(votes)
       .expect(404);
-    expect(body).toEqual({ msg: "No review found at review_id: 500" });
-  });
-
-  test("STATUS: 400, no votes on the request body", async () => {
-    const votes = { not_inc_votes: 1 };
-    const { body } = await request(app)
-      .patch("/api/reviews/14")
-      .send(votes)
-      .expect(400);
-    expect(body).toEqual({ msg: "Invalid input" });
+    expect(body.msg).toEqual("No review found at review_id: 500");
   });
 
   test("STATUS: 400, invalid votes value", async () => {
@@ -229,6 +241,13 @@ describe("GET api/reviews", () => {
       .expect(400);
     expect(body.msg).toEqual("Invalid order query");
   });
+
+  test("STATUS 404: responds with 404 when invalid category query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?category=bananas")
+      .expect(404);
+    expect(body.msg).toEqual("Category not found");
+  });
 });
 
 describe("GET api/reviews/:review_id/comments", () => {
@@ -319,6 +338,15 @@ describe("POST api/reviews/:review_id/comments", () => {
       .send(newComment2)
       .expect(400);
     expect(result.body).toEqual({ msg: "Invalid input" });
+  });
+
+  test("STATUS: 404, valid username doesn't exist", async () => {
+    const newComment = { username: "james", body: "Cool review!" };
+    const { body } = await request(app)
+      .post("/api/reviews/3/comments")
+      .send(newComment)
+      .expect(404);
+    expect(body.msg).toEqual("Username doesn't exist");
   });
 });
 
