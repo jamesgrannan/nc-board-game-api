@@ -387,3 +387,15 @@ describe("GET /api", () => {
     );
   });
 });
+
+describe("GET /api/users", () => {
+  test("Status 200: respond with JSON object", async () => {
+    const { body } = await request(app).get("/api/users").expect(200);
+    expect(body.users).toEqual([
+      { username: "mallionaire" },
+      { username: "philippaclaire9" },
+      { username: "bainesface" },
+      { username: "dav3rid" },
+    ]);
+  });
+});
