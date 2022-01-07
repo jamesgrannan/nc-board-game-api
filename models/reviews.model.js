@@ -187,3 +187,63 @@ exports.createComment = async (post, id) => {
   }
   return rows[0];
 };
+
+exports.removeReview = (id) => {
+  return db
+    .query(`SELECT * FROM reviews WHERE review_id = $1`, [id])
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: `No review found at review_id: ${id}`,
+        });
+      }
+    })
+    .then(() => {
+      return db.query(
+        `DELETE FROM reviews
+    WHERE review_id = $1`,
+        [id]
+      );
+    });
+};
+
+exports.createReview = async (post) => {
+  if (
+    post.owner &&
+    post.title &&
+    post.review_body &&
+    post.designer &&
+    post.category
+  ) {
+    const check1 = await checkDatabase(
+      "users",
+      "username",
+      post.owner,
+      "Owner not found"
+    );
+
+    const check2 = await checkDatabase(
+      "categories",
+      "slug",
+      post.category,
+      "Category not found"
+    );
+  } else {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid input",
+    });
+  }
+  const { owner, title, review_body, designer, category } = post;
+  const postingReview = await db.query(
+    `INSERT INTO reviews
+  (owner, title, review_body, designer, category)
+  VALUES
+  ($1, $2, $3, $4, $5)
+  RETURNING *;`,
+    [owner, title, review_body, designer, category]
+  );
+  const { rows } = postingReview;
+  return rows[0];
+};

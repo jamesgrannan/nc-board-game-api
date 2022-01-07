@@ -4,6 +4,8 @@ const {
   fetchAllReviews,
   fetchComments,
   createComment,
+  removeReview,
+  createReview,
 } = require("../models/reviews.model");
 
 exports.getReview = (req, res, next) => {
@@ -46,6 +48,23 @@ exports.postComment = (req, res, next) => {
   createComment(req.body, review_id)
     .then((comment) => {
       res.status(201).send({ comment });
+    })
+    .catch(next);
+};
+
+exports.deleteReview = (req, res, next) => {
+  const { review_id } = req.params;
+  removeReview(review_id)
+    .then(() => {
+      res.status(204).send();
+    })
+    .catch(next);
+};
+
+exports.postReview = (req, res, next) => {
+  createReview(req.body)
+    .then((review) => {
+      res.status(201).send({ review });
     })
     .catch(next);
 };

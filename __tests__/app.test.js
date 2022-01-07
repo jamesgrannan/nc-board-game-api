@@ -366,7 +366,7 @@ describe("DELETE /api/comments/:comment_id", () => {
     const { body } = await request(app)
       .delete("/api/comments/9999")
       .expect(404);
-    expect(body).toEqual({ msg: "No review found at review_id: 9999" });
+    expect(body).toEqual({ msg: "No comment found at comment_id: 9999" });
   });
 });
 
@@ -389,7 +389,7 @@ describe("GET /api", () => {
 });
 
 describe("GET /api/users", () => {
-  test("Status 200: respond with JSON object", async () => {
+  test("STATUS 200: respond with JSON object", async () => {
     const { body } = await request(app).get("/api/users").expect(200);
     expect(body.users).toEqual([
       { username: "mallionaire" },
@@ -397,5 +397,239 @@ describe("GET /api/users", () => {
       { username: "bainesface" },
       { username: "dav3rid" },
     ]);
+  });
+});
+
+describe("GET /api/users/:username", () => {
+  test("STATUS 200: respond with specific user object", async () => {
+    const { body } = await request(app)
+      .get("/api/users/bainesface")
+      .expect(200);
+    expect(body.user).toEqual({
+      username: "bainesface",
+      name: "sarah",
+      avatar_url: "https://avatars2.githubusercontent.com/u/24394918?s=400&v=4",
+    });
+  });
+
+  test("STATUS 404: username not found", async () => {
+    const { body } = await request(app)
+      .get("/api/users/basketball")
+      .expect(404);
+    expect(body.msg).toEqual("No user found at username: basketball");
+  });
+});
+
+describe("PATCH /api/comments/:comment_id", () => {
+  test("STATUS: 200, Responds with updated comment", async () => {
+    const votes = { inc_votes: 4 };
+    const { body } = await request(app)
+      .patch("/api/comments/1")
+      .send(votes)
+      .expect(200);
+    expect(body.comment).toEqual(
+      expect.objectContaining({
+        body: "I loved this game too!",
+        author: "bainesface",
+        created_at: expect.any(String),
+        votes: 20,
+      })
+    );
+  });
+
+  test("STATUS: 200, responds with updated comment when subtracting votes", async () => {
+    const votes = { inc_votes: -4 };
+    const { body } = await request(app)
+      .patch("/api/comments/2")
+      .send(votes)
+      .expect(200);
+    expect(body.comment).toEqual(
+      expect.objectContaining({
+        body: "My dog loved this game too!",
+        votes: 9,
+        author: "mallionaire",
+        created_at: expect.any(String),
+      })
+    );
+  });
+
+  test("STATUS: 200, no votes on the request body, responds with unchanged comment", async () => {
+    const votes = { not_inc_votes: 876 };
+    const { body } = await request(app)
+      .patch("/api/comments/3")
+      .send(votes)
+      .expect(200);
+    expect(body.comment).toEqual(
+      expect.objectContaining({
+        body: "I didn't know dogs could play games",
+        votes: 10,
+        author: "philippaclaire9",
+        created_at: expect.any(String),
+      })
+    );
+  });
+
+  test("STATUS: 400, bad id", async () => {
+    const votes = { inc_votes: 10 };
+    const { body } = await request(app)
+      .patch("/api/comments/NO_ENTRY")
+      .send(votes)
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const votes = { inc_votes: 10 };
+    const { body } = await request(app)
+      .patch("/api/comments/100")
+      .send(votes)
+      .expect(404);
+    expect(body.msg).toEqual("No comment found at comment_id: 100");
+  });
+
+  test("STATUS: 400, invalid votes value", async () => {
+    const votes = { inc_votes: "string" };
+    const { body } = await request(app)
+      .patch("/api/comments/7")
+      .send(votes)
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+  });
+
+  test("STATUS: 400, included other information in request", async () => {
+    const votes = { inc_votes: 20, hello: "world" };
+    const { body } = await request(app)
+      .patch("/api/comments/4")
+      .send(votes)
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+  });
+});
+
+describe("DELETE /api/review/:review_id", () => {
+  test("STATUS 204, delete comment and respond with nothing", async () => {
+    const result = await request(app).delete("/api/reviews/4").expect(204);
+  });
+
+  test("STATUS: 400, bad id", async () => {
+    const { body } = await request(app)
+      .delete("/api/reviews/nothing")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+  });
+
+  test("STATUS: 404, id doesn't exist", async () => {
+    const { body } = await request(app).delete("/api/reviews/9999").expect(404);
+    expect(body.msg).toEqual("No review found at review_id: 9999");
+  });
+});
+
+describe("POST /api/categories", () => {
+  test("STATUS: 201, posted category successfully", async () => {
+    const newCategory = {
+      slug: "2 player games",
+      description: "games for two players",
+    };
+    const { body } = await request(app)
+      .post("/api/categories")
+      .send(newCategory)
+      .expect(201);
+    expect(body.category).toEqual(newCategory);
+  });
+
+  test("STATUS: 400, request body is missing key", async () => {
+    const newCategory = { slug: "2 player games" };
+    const { body } = await request(app)
+      .post("/api/categories")
+      .send(newCategory)
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+    const newCategory2 = { description: "games for two players" };
+    const result = await request(app)
+      .post("/api/categories")
+      .send(newCategory2)
+      .expect(400);
+    expect(result.body.msg).toEqual("Invalid input");
+  });
+
+  test("STATUS: 400, category already exists", async () => {
+    const newCategory = {
+      slug: "euro game",
+      description: "game from europe :D",
+    };
+    const { body } = await request(app)
+      .post("/api/categories")
+      .send(newCategory)
+      .expect(400);
+    expect(body.msg).toEqual("Category already exists");
+  });
+});
+
+describe.only("POST api/reviews", () => {
+  test("STATUS: 201, posted review successfully", async () => {
+    const newReview = {
+      owner: "mallionaire",
+      title: "UNO",
+      review_body: "Very good game",
+      designer: "don't know",
+      category: "children's games",
+    };
+    const { body } = await request(app)
+      .post("/api/reviews")
+      .send(newReview)
+      .expect(201);
+    expect(body.review).toEqual(
+      expect.objectContaining({
+        ...newReview,
+        votes: 0,
+        comment_count: 0,
+        created_at: expect.any(String),
+        review_id: expect.any(Number),
+      })
+    );
+  });
+
+  test("STATUS: 400, request body is missing key", async () => {
+    const newReview = {
+      owner: "mallionaire",
+      title: "UNO",
+      review_body: "Very good game",
+      category: "children's games",
+    };
+    const { body } = await request(app)
+      .post("/api/reviews")
+      .send(newReview)
+      .expect(400);
+    expect(body.msg).toEqual("Invalid input");
+  });
+
+  test("STATUS: 404, owner not found", async () => {
+    const newReview = {
+      owner: "james!!",
+      title: "UNO",
+      review_body: "Very good game",
+      designer: "don't know",
+      category: "children's games",
+    };
+    const { body } = await request(app)
+      .post("/api/reviews")
+      .send(newReview)
+      .expect(404);
+    expect(body.msg).toEqual("Owner not found");
+  });
+
+  test("STATUS: 404, category not found", async () => {
+    const newReview = {
+      owner: "mallionaire",
+      title: "UNO",
+      review_body: "Very good game",
+      designer: "don't know",
+      category: "card game",
+    };
+    const { body } = await request(app)
+      .post("/api/reviews")
+      .send(newReview)
+      .expect(404);
+    expect(body.msg).toEqual("Category not found");
   });
 });
