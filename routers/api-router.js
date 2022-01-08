@@ -13,12 +13,6 @@ apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/reviews", reviewRouter);
 apiRouter.use("/comments", commentRouter);
 apiRouter.use("/users", userRouter);
-apiRouter
-  .route("*")
-  .get(wrongEndpoint)
-  .post(wrongEndpoint)
-  .put(wrongEndpoint)
-  .patch(wrongEndpoint)
-  .delete(wrongEndpoint);
+apiRouter.route("*").all(wrongEndpoint);
 
 module.exports = apiRouter;

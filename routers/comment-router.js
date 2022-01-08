@@ -1,3 +1,4 @@
+const { wrongMethod } = require("../controllers/api-controller");
 const {
   deleteComment,
   patchComment,
@@ -5,6 +6,10 @@ const {
 
 const commentRouter = require("express").Router();
 
-commentRouter.route("/:comment_id").delete(deleteComment).patch(patchComment);
+commentRouter
+  .route("/:comment_id")
+  .delete(deleteComment)
+  .patch(patchComment)
+  .all(wrongMethod);
 
 module.exports = commentRouter;

@@ -5,5 +5,9 @@ exports.getEndpoints = (req, res) => {
 };
 
 exports.wrongEndpoint = (req, res) => {
-  res.status(404).send({ msg: "Endpoint or method doesn't exist" });
+  res.status(404).send({ msg: "Endpoint doesn't exist" });
+};
+
+exports.wrongMethod = (req, res) => {
+  res.status(405).send({ msg: "Method doesn't exist" });
 };
