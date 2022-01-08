@@ -55,7 +55,7 @@ Minimum version requirements for Node.js: 16.1 & Postgres: 12.9
 
 ### View the website
 
-The hosted version can be found here: https://great-library-of-board-games.herokuapp.com/
+The hosted version can be found here: https://great-library-of-board-games.herokuapp.com/api
 
 ---
 
