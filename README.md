@@ -2,7 +2,7 @@
 
 ## Summary
 
-This is a board game review website where uses can submit reviews about board games and comment on each other's reviews. There is also a vote feature which allows users to up or down vote reviews and comments.
+This is my backend project I completed at Northcoders bootcamp. This api is for a board game review website where uses can submit reviews about board games and comment on each other's reviews. There is also a vote feature which allows users to up or down vote reviews and comments. Data for this api was already given to us in the form of categories, comments, reviews and users.
 
 ---
 
@@ -45,7 +45,11 @@ This is a board game review website where uses can submit reviews about board ga
 PGDATABASE=nc_games
 ```
 
-- Minimum version requirements for Node.js: 16.1 & Postgres: 12.9
+---
+
+### Requirements
+
+Minimum version requirements for Node.js: 16.1 & Postgres: 12.9
 
 ---
 

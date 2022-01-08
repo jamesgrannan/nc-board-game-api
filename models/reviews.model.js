@@ -61,6 +61,8 @@ exports.fetchAllReviews = async ({
   sort_by = "created_at",
   order = "DESC",
   category,
+  limit = 10,
+  p = 1,
 }) => {
   const queryValues = [];
 
@@ -80,6 +82,12 @@ exports.fetchAllReviews = async ({
   if (!["ASC", "DESC"].includes(order)) {
     return Promise.reject({ status: 400, msg: "Invalid order query" });
   }
+  if (isNaN(limit)) {
+    return Promise.reject({ status: 400, msg: "Invalid limit query" });
+  }
+  if (isNaN(p)) {
+    return Promise.reject({ status: 400, msg: "Invalid p query" });
+  }
   if (typeof category === "object") {
     category.forEach(async (cat) => {
       const checkCategory = await checkDatabase(
@@ -98,6 +106,8 @@ exports.fetchAllReviews = async ({
       "Category not found"
     );
   }
+  const offset = (p - 1) * limit;
+
   let queryStr = `SELECT title, owner, reviews.review_id, review_img_url, review_body, category, reviews.created_at, reviews.votes,
   COUNT(comments.review_id)
   AS comment_count
@@ -117,19 +127,34 @@ exports.fetchAllReviews = async ({
       queryStr += ` category = $${queryValues.length}`;
     }
   }
-  queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`;
+  queryStr += ` GROUP BY reviews.review_id `;
+  const noPagination = await db.query(queryStr, queryValues);
+  const total = noPagination.rows.length;
+
+  queryStr += `ORDER BY ${sort_by} ${order} LIMIT ${limit} OFFSET ${offset};`;
 
   const query = await db.query(queryStr, queryValues);
-  return query.rows;
+  return query.rows.length === 0
+    ? Promise.reject({ status: 404, msg: "No results to display on this page" })
+    : { reviews: query.rows, total_count: total };
 };
 
-exports.fetchComments = async (id) => {
+exports.fetchComments = async (id, { limit = 10, p = 1 }) => {
+  if (isNaN(limit)) {
+    return Promise.reject({ status: 400, msg: "Invalid limit query" });
+  }
+  if (isNaN(p)) {
+    return Promise.reject({ status: 400, msg: "Invalid p query" });
+  }
+  const offset = (p - 1) * limit;
   const commentQuery = await db.query(
     `SELECT *
 FROM comments
 LEFT JOIN reviews
 ON reviews.review_id = comments.review_id
-WHERE comments.review_id = $1;`,
+WHERE comments.review_id = $1
+LIMIT ${limit}
+OFFSET ${offset};`,
     [id]
   );
   const { rows } = commentQuery;
@@ -141,10 +166,15 @@ WHERE comments.review_id = $1;`,
       `No review found at review_id: ${id}`
     );
 
-    return Promise.reject({
-      status: 404,
-      msg: "No comments on this review",
-    });
+    return p > 1
+      ? Promise.reject({
+          status: 404,
+          msg: "No results to display on this page",
+        })
+      : Promise.reject({
+          status: 404,
+          msg: "No comments on this review",
+        });
   }
 
   return rows;
@@ -245,5 +275,7 @@ exports.createReview = async (post) => {
     [owner, title, review_body, designer, category]
   );
   const { rows } = postingReview;
+  rows[0].comment_count = 0;
+  delete rows[0].review_img_url;
   return rows[0];
 };

@@ -29,14 +29,14 @@ exports.patchReview = (req, res, next) => {
 exports.getAllReviews = (req, res, next) => {
   fetchAllReviews(req.query)
     .then((reviews) => {
-      res.status(200).send({ reviews });
+      res.status(200).send(reviews);
     })
     .catch(next);
 };
 
 exports.getComments = (req, res, next) => {
   const { review_id } = req.params;
-  fetchComments(review_id)
+  fetchComments(review_id, req.query)
     .then((comments) => {
       res.status(200).send({ comments });
     })

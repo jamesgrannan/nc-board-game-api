@@ -165,7 +165,9 @@ describe("PATCH /api/reviews/:review_id", () => {
 
 describe("GET api/reviews", () => {
   test("STATUS: 200, respond with all reviews", async () => {
-    const { body } = await request(app).get("/api/reviews").expect(200);
+    const { body } = await request(app)
+      .get("/api/reviews?limit=20")
+      .expect(200);
     expect(body.reviews).toHaveLength(13);
     expect(/^2021/.test(body.reviews[0].created_at)).toBeTruthy();
     expect(/^1970/.test(body.reviews[12].created_at)).toBeTruthy();
@@ -188,7 +190,7 @@ describe("GET api/reviews", () => {
 
   test("STATUS: 200, respond with sorted reviews when sorted by votes", async () => {
     const { body } = await request(app)
-      .get("/api/reviews?sort_by=votes")
+      .get("/api/reviews?sort_by=votes&limit=20")
       .expect(200);
     expect(body.reviews).toHaveLength(13);
     expect(body.reviews[6].votes <= body.reviews[0].votes).toBeTruthy();
@@ -197,7 +199,7 @@ describe("GET api/reviews", () => {
 
   test("STATUS: 200, respond with sorted reviews when sorted by category", async () => {
     const { body } = await request(app)
-      .get("/api/reviews?sort_by=category&order=ASC")
+      .get("/api/reviews?sort_by=category&order=ASC&limit=20")
       .expect(200);
     const sorted = body.reviews
       .reverse()
@@ -209,7 +211,7 @@ describe("GET api/reviews", () => {
 
   test("STATUS 200, respond with filtered reviews", async () => {
     const { body } = await request(app)
-      .get("/api/reviews?category=social+deduction")
+      .get("/api/reviews?category=social+deduction&limit=20")
       .expect(200);
     expect(body.reviews).toHaveLength(11);
     body.reviews.forEach((review) => {
@@ -247,6 +249,52 @@ describe("GET api/reviews", () => {
       .get("/api/reviews?category=bananas")
       .expect(404);
     expect(body.msg).toEqual("Category not found");
+  });
+
+  test("STATUS 200: responds with 10 results", async () => {
+    const { body } = await request(app).get("/api/reviews").expect(200);
+    expect(body.reviews.length).toBe(10);
+  });
+
+  test("STATUS 200: responds with 15 results when we provide a limit query", async () => {
+    const { body } = await request(app).get("/api/reviews?limit=5").expect(200);
+    expect(body.reviews.length).toBe(5);
+  });
+
+  test("STATUS 400: responds with 400 when invalid limit query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?limit=abc")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid limit query");
+  });
+
+  test("STATUS 200: displays page 2 of results", async () => {
+    const { body } = await request(app).get("/api/reviews?p=2").expect(200);
+    expect(body.reviews.length).toBe(3);
+  });
+
+  test("STATUS 404: no results to display on this page", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?limit=5&p=5")
+      .expect(404);
+    expect(body.msg).toBe("No results to display on this page");
+  });
+
+  test("STATUS 400: responds with 400 when invalid p query is passed", async () => {
+    const { body } = await request(app).get("/api/reviews?p=abc").expect(400);
+    expect(body.msg).toEqual("Invalid p query");
+  });
+
+  test("STATUS 200: displays total_count which ignores pagination", async () => {
+    const { body } = await request(app).get("/api/reviews").expect(200);
+    expect(body.total_count).toBe(13);
+  });
+
+  test("STATUS 200: total_count works with filters", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews?category=social+deduction")
+      .expect(200);
+    expect(body.total_count).toBe(11);
   });
 });
 
@@ -288,6 +336,48 @@ describe("GET api/reviews/:review_id/comments", () => {
       .get("/api/reviews/1/comments")
       .expect(404);
     expect(body.msg).toEqual("No comments on this review");
+  });
+
+  test("STATUS 200: responds with up to 10 results", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/2/comments")
+      .expect(200);
+    expect(body.comments.length).toBe(3);
+  });
+
+  test("STATUS 200: responds with 2 results when we provide a limit query", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/2/comments?limit=2")
+      .expect(200);
+    expect(body.comments.length).toBe(2);
+  });
+
+  test("STATUS 400: responds with 400 when invalid limit query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/3/comments?limit=abc")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid limit query");
+  });
+
+  test("STATUS 200: displays page 2 of results", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/3/comments?limit=2&p=2")
+      .expect(200);
+    expect(body.comments.length).toBe(1);
+  });
+
+  test("STATUS 404: no results to display on this page", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/2/comments?p=3")
+      .expect(404);
+    expect(body.msg).toBe("No results to display on this page");
+  });
+
+  test("STATUS 400: responds with 400 when invalid p query is passed", async () => {
+    const { body } = await request(app)
+      .get("/api/reviews/2/comments?p=abc")
+      .expect(400);
+    expect(body.msg).toEqual("Invalid p query");
   });
 });
 
@@ -565,7 +655,7 @@ describe("POST /api/categories", () => {
   });
 });
 
-describe.only("POST api/reviews", () => {
+describe("POST api/reviews", () => {
   test("STATUS: 201, posted review successfully", async () => {
     const newReview = {
       owner: "mallionaire",
