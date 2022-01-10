@@ -1,4 +1,4 @@
-# Great Library of Board Games
+# Meeple Café
 
 ## Summary
 
@@ -55,12 +55,12 @@ Minimum version requirements for Node.js: 16.1 & Postgres: 12.9
 
 ### View the website
 
-The hosted version can be found here: https://great-library-of-board-games.herokuapp.com/api
+The hosted version can be found here: https://meeple-cafe.herokuapp.com/api
 
 ---
 
 ### Available Endpoints
 
-The list of endpoints that can be used as well as other information on them can be found here: https://great-library-of-board-games.herokuapp.com/api
+The list of endpoints that can be used as well as other information on them can be found here: https://meeple-cafe.herokuapp.com/api
 
 ---
