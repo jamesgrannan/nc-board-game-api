@@ -148,7 +148,7 @@ exports.fetchComments = async (id, { limit = 10, p = 1 }) => {
   }
   const offset = (p - 1) * limit;
   const commentQuery = await db.query(
-    `SELECT *
+    `SELECT comment_id, comments.votes, author, comments.created_at, body
 FROM comments
 LEFT JOIN reviews
 ON reviews.review_id = comments.review_id
