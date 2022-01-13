@@ -147,6 +147,16 @@ exports.fetchComments = async (id, { limit = 10, p = 1 }) => {
     return Promise.reject({ status: 400, msg: "Invalid p query" });
   }
   const offset = (p - 1) * limit;
+
+  const noPagination = await db.query(
+    `SELECT *
+  FROM comments
+  LEFT JOIN reviews
+  ON reviews.review_id = comments.review_id
+  WHERE comments.review_id = $1;`,
+    [id]
+  );
+  const total = noPagination.rows.length || 0;
   const commentQuery = await db.query(
     `SELECT comment_id, comments.votes, author, comments.created_at, body
 FROM comments
@@ -177,7 +187,7 @@ OFFSET ${offset};`,
         });
   }
 
-  return rows;
+  return { comments: rows, total_count: total };
 };
 
 exports.createComment = async (post, id) => {
