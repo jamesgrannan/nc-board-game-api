@@ -15,24 +15,6 @@ This is my backend project I completed at Northcoders bootcamp. This api is for 
   npm install
 ```
 
-- Running this will initialise the database ready for seeding:
-
-```json
-  npm run setup-dbs
-```
-
-- Running this will seed the production database:
-
-```json
-  npm run seed:prod
-```
-
-- To run the test file, run:
-
-```json
-  npm test __tests__/app.test.js
-```
-
 - You wil need to create two .env files. A '.env.test' containing this:
 
 ```json
@@ -45,6 +27,32 @@ This is my backend project I completed at Northcoders bootcamp. This api is for 
 PGDATABASE=nc_games
 ```
 Both of these will link you to the databases that have been provided to me. But feel free to link them to your own.
+
+
+- Running this will initialise the database ready for seeding:
+
+```json
+  npm run setup-dbs
+```
+
+- Running this will seed the database:
+
+```json
+  npm run seed
+```
+
+- To run the test file (I use Jest), run:
+
+```json
+  npm test
+```
+
+- Now to use this in conjucntion with an api client like Insomnia we need to set up listening. Run:
+
+```json
+  npm run start
+```
+
 ---
 
 ### Requirements
