@@ -24,7 +24,7 @@ This is my backend project I completed at Northcoders bootcamp. This api is for 
 - Also create a '.env.development' containing:
 
 ```json
-PGDATABASE=nc_games
+  PGDATABASE=nc_games
 ```
 Both of these will link you to the databases that have been provided to me. But feel free to link them to your own.
 
@@ -52,6 +52,8 @@ Both of these will link you to the databases that have been provided to me. But 
 ```json
   npm run start
 ```
+
+You should now be ready to make requests!
 
 ---
 
