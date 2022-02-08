@@ -8,7 +8,8 @@ This is my backend project I completed at Northcoders bootcamp. This api is for 
 
 ## Setup
 
-- Clone the repository with this link: https://github.com/jamesgrannan/nc_board_games.git
+- Clone the repository with this link: https://github.com/jamesgrannan/nc-board-game-api.git
+- Make sure you change directory into this repository.
 - Running this in your terminal should install all the necessary packages:
 
 ```json
@@ -77,6 +78,6 @@ The list of endpoints that can be used as well as other information on them can 
 
 ### Front-end counterpart
 
-The front-end github page for this api that I also built at Northcoders can be found here: https://github.com/jamesgrannan/Board-Game-Review-Site
+The front-end github page for this api that I also built at Northcoders can be found here: https://github.com/jamesgrannan/board-game-review-site
 
 ---
