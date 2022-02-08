@@ -2,7 +2,7 @@
 
 ## Summary
 
-This is my backend project I completed at Northcoders bootcamp. This api is for a board game review website where uses can submit reviews about board games and comment on each other's reviews. There is also a vote feature which allows users to up or down vote reviews and comments. Data for this api was already given to us in the form of categories, comments, reviews and users.
+This is my backend project I completed at Northcoders bootcamp. This api is for a board game review website where uses can submit reviews about board games and comment on each other's reviews. There is also a vote feature which allows users to up or down vote reviews and comments. Data for this api was already given to us in the form of categories, comments, reviews and users. This is the first api I have built and I've learned so much while completing it.
 
 ---
 
@@ -44,7 +44,7 @@ This is my backend project I completed at Northcoders bootcamp. This api is for 
 ```json
 PGDATABASE=nc_games
 ```
-
+Both of these will link you to the databases that have been provided to me. But feel free to link them to your own.
 ---
 
 ### Requirements
