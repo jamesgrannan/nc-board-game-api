@@ -64,3 +64,9 @@ The hosted version can be found here: https://meeple-cafe.herokuapp.com/api
 The list of endpoints that can be used as well as other information on them can be found here: https://meeple-cafe.herokuapp.com/api
 
 ---
+
+### Front-end counterpart
+
+The front-end github page for this api that I also built at Northcoders can be found here: https://github.com/jamesgrannan/Board-Game-Review-Site
+
+---
